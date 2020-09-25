@@ -1,5 +1,6 @@
 from bamboo.analysismodules import NanoAODModule, NanoAODHistoModule, NanoAODSkimmerModule
 import os.path
+import os
 
 import bamboo.treedecorators as btd
 class ReadVariableVarWithSuffix(btd.ReadVariableVarWithSuffix):
@@ -91,16 +92,28 @@ class Nano5TeVAnalyzer(Nano5TeVHistoModule):
             noSel = noSel.refine("mcWeight", weight=[ t.genWeight ])
             noSel = noSel.refine("puWeight", weight=[ t.puWeight ])
             noSel = noSel.refine("PrefireWeight", weight=[ t.PrefireWeight ])
+            
+            #psWeight systematics for varying muR and muF
+            muR = op.systematic(op.c_float(1.), name="muR", up=t.PSWeight[2], down=t.PSWeight[0])
+            muF = op.systematic(op.c_float(1.), name="muF", up=t.PSWeight[3], down=t.PSWeight[1])
+
+            noSel = noSel.refine("muR", weight=[ muR ])
+            noSel = noSel.refine("muF", weight=[ muF ])
 
         noSel = noSel.refine("trig", cut=op.OR(t.HLT.HIL3DoubleMu0, t.HLT.HIEle20_Ele12_CaloIdL_TrackIdL_IsoVL_DZ))
 
         plots = []
 
         muons = op.select(t.Muon, lambda mu : mu.pt > 20.)
+        jets = op.select(t.Jet, lambda j : j.pt > 30.)
         twoMuSel = noSel.refine("twoMuons", cut=[ op.rng_len(muons) > 1 ])
         plots.append(Plot.make1D("dimu_M",
             op.invariant_mass(muons[0].p4, muons[1].p4), twoMuSel, EqB(100, 20., 120.),
             title="Dimuon invariant mass", plotopts={"show-overflow":False,
             "legend-position": [0.2, 0.6, 0.5, 0.9]}))
+        plots.append(Plot.make1D("nJets",op.rng_len(jets), twoMuSel, EqB(10, -0.5, 9.5),
+            title="Jet multiplicity", plotopts={"show-overflow":False,
+            "legend-position": [0.2, 0.6, 0.5, 0.9]}))
+
 
         return plots

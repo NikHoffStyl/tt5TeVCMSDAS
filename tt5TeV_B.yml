@@ -113,7 +113,15 @@ plotIt:
       type: shape
     - PrefireWeight:
       type: shape
-    - lumi: 1.015     
+    - lumi: 1.015
+    - jet:
+      type: shape  
+    - PDFWeight:
+      type: shape
+    - muR:
+      type: shape
+    - muF:
+      type: shape   
   configuration:
     width: 800
     height: 600
