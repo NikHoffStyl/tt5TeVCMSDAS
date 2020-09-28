@@ -41,6 +41,34 @@ samples:
     era: "2017"
     files: filelists/TT_TuneCP5_PSweights_5p02TeV.dat
     generated-events: genEventSumw
+  TT_TuneCP5down:
+    group: TT_TuneCP5down
+    cross-section: 68.9
+    era: "2017"
+    files: filelists/TT_TuneCP5down_5p02TeV.dat
+    generated-events: genEventSumw
+    alt-syst: TuneCP5down
+  TT_TuneCP5up:
+    group: TT_TuneCP5up
+    cross-section: 68.9
+    era: "2017"
+    files: filelists/TT_TuneCP5up_5p02TeV.dat 
+    generated-events: genEventSumw
+    alt-syst: TuneCP5up
+  TT_hdampdown:
+    group: TT_hdampdown
+    cross-section: 68.9
+    era: "2017"
+    files: filelists/TT_hdampDOWN_TuneCP5_5p02TeV.dat
+    generated-events: genEventSumw
+    alt-syst: hdampdown
+  TT_hdampup:
+    group: TT_hdampup
+    cross-section: 68.9
+    era: "2017"
+    files: filelists/TT_hdampUP_TuneCP5_5p02TeV.dat
+    generated-events: genEventSumw
+    alt-syst: hdampup
   tW:
     group: tW
     cross-section: 1.629072
@@ -79,7 +107,21 @@ samples:
     generated-events: genEventSumw
 plotIt:
   systematics:
-    - muScale    
+    - muScale:
+      type: shape
+    - puWeight:
+      type: shape
+    - PrefireWeight:
+      type: shape
+    - lumi: 1.015
+    - jet:
+      type: shape  
+    - PDFWeight:
+      type: shape
+    - muR:
+      type: shape
+    - muF:
+      type: shape   
   configuration:
     width: 800
     height: 600
@@ -119,5 +161,3 @@ plotIt:
     save-extensions: [pdf]
     show-ratio: True
     sort-by-yields: False
-  systematics:
-    - muScale
