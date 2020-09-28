@@ -20,7 +20,9 @@ class ReadElScaleCorrection(btd.NanoSystematicVarSpec):
         return name == "Electron"
     def getVarName(self, name, collgrpname=None):
         if name.split("_")[0] in ("pt", "mass") and len(name.split("_")) >= 2:
-            return name.split("_")[0], "_".join(name.split("_")[1:])
+            v = name.split("_")[0]
+            vari = "_".join(name.split("_")[1:])
+            return v, "nom" if vari == "nom" else f"{self.systName}{vari}"
     def nomName(self, name):
         return "nom"
 _descr_5TeV_removedGroups = ["CaloMET_", "ChsMET_", "RawMET_", "TkMET_"]

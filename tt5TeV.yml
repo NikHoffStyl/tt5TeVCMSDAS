@@ -35,6 +35,7 @@ samples:
     era: "2017"
     files: filelists/DYJetsToLL_MLL_50_TuneCP5_5020GeV_amcatnloFXFX.dat
     generated-events: genEventSumw
+    split: 5
   TT:
     group: TT
     cross-section: 68.9
