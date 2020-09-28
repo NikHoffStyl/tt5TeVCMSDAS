@@ -20,7 +20,10 @@ class ReadElScaleCorrection(btd.NanoSystematicVarSpec):
         return name == "Electron"
     def getVarName(self, name, collgrpname=None):
         if name.split("_")[0] in ("pt", "mass") and len(name.split("_")) >= 2:
-            return name.split("_")[0], "_".join(name.split("_")[1:])
+            v = name.split("_")[0]
+            vari = "_".join(name.split("_")[1:])
+            return v, "nom" if vari == "nom" else f"{self.systName}{vari}"
+            # return name.split("_")[0], "_".join(name.split("_")[1:])
     def nomName(self, name):
         return "nom"
 _descr_5TeV_removedGroups = ["CaloMET_", "ChsMET_", "RawMET_", "TkMET_"]
@@ -102,7 +105,6 @@ class DileptonBGroup(Nano5TeVHistoModule):
 
         oselmu = op.combine((electrons, muons))
         leptons = oselmu[0] 
-        #leptons = muons + electrons
         twoLepSel = noSel.refine("twoLeptons", cut=[ op.rng_len(electrons) == 1 , op.rng_len(muons) == 1 ])
 
         jets = op.select(t.Jet, lambda j : j.pt > 30.)
@@ -123,9 +125,27 @@ class DileptonBGroup(Nano5TeVHistoModule):
             "legend-position": [0.2, 0.6, 0.5, 0.9]}))
         #plots.append(SummedPlot("Mjj", plots, title="m(jj)"))
 
-        print("LALALALAL")
-
         plots.append(Plot.make1D("nJets",op.rng_len(jets), twoMuSel, EqB(10, -0.5, 9.5),
+            title="Jet multiplicity", plotopts={"show-overflow":False,
+            "legend-position": [0.2, 0.6, 0.5, 0.9]}))
+
+        plots.append(Plot.make1D("nBJets",op.rng_len(bjets), twoMuSel, EqB(10, -0.5, 9.5),
+            title="Jet multiplicity", plotopts={"show-overflow":False,
+            "legend-position": [0.2, 0.6, 0.5, 0.9]}))
+
+        plots.append(Plot.make1D("nJets",op.rng_len(jets), twoElSel, EqB(10, -0.5, 9.5),
+            title="Jet multiplicity", plotopts={"show-overflow":False,
+            "legend-position": [0.2, 0.6, 0.5, 0.9]}))
+
+        plots.append(Plot.make1D("nBJets",op.rng_len(bjets), twoElSel, EqB(10, -0.5, 9.5),
+            title="Jet multiplicity", plotopts={"show-overflow":False,
+            "legend-position": [0.2, 0.6, 0.5, 0.9]}))
+
+        plots.append(Plot.make1D("nJets",op.rng_len(jets), twoLepSel, EqB(10, -0.5, 9.5),
+            title="Jet multiplicity", plotopts={"show-overflow":False,
+            "legend-position": [0.2, 0.6, 0.5, 0.9]}))
+
+        plots.append(Plot.make1D("nBJets",op.rng_len(bjets), twoLepSel, EqB(10, -0.5, 9.5),
             title="Jet multiplicity", plotopts={"show-overflow":False,
             "legend-position": [0.2, 0.6, 0.5, 0.9]}))
 
