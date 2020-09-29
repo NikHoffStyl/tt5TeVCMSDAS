@@ -91,12 +91,15 @@ class DileptonBGroup(Nano5TeVHistoModule):
         from bamboo.root import gbl
 
         for plot in plots:
-            print(plot.name)
+            print(plot.name + " sample name"+ str([smp.cfg.name for smp in samples]))
             obsHists = [smp.getHist(plot) for smp in samples if smp.cfg.type == "DATA"]
+            print(plot.name + " Data sample name"+ str([smp.cfg.name for smp in samples if smp.cfg.type == "DATA"]))
             obsStack = Stack(obsHists) 
-            bkgHists = [smp.getHist(plot) for smp in samples if (smp.cfg.type == "MC" and smp.cfg.name != "TT")]
+            bkgHists = [smp.getHist(plot) for smp in samples if (smp.cfg.type == "MC" and ("TT" not in smp.cfg.name) and ("down" not in smp.cfg.name) and ("up" not in smp.cfg.name) )]
+            print(plot.name + " Bkgsample name"+ str([smp.cfg.name for smp in samples if (smp.cfg.type == "MC" and ("TT" not in smp.cfg.name) and ("down" not in smp.cfg.name) and ("up" not in smp.cfg.name) )]))
             bkgStack = Stack(bkgHists)
             sigPlot = [smp.getHist(plot) for smp in samples if smp.cfg.name == "TT"]
+            print(plot.name + " TT sample name"+ str([smp.cfg.name for smp in samples if smp.cfg.name == "TT"]))
 
             if "nTotalJets" in plot.name:
                 for smp in samples:
@@ -110,8 +113,8 @@ class DileptonBGroup(Nano5TeVHistoModule):
                     branchRat = 68.9
                     accTmp = smp.getHist(plot).obj.Clone(plot.name+"acc")
                     #accden = smp.getHist(plot).obj.Clone(plot.name+"accden")
-                    accTmpVal = accTmp.GetEffectiveEntries()
-                    accdenVal = (accden.GetEffectiveEntries())
+                    accTmpVal = accTmp.Integral()
+                    accdenVal = (accden.Integral())
                     acceptance1Val[plot.name] = accTmpVal / (accdenVal * branchRat)
                     effic1Val[plot.name] = accTmpVal / accdenVal
                     print(plot.name+ " A ==  " + str(acceptance1Val[plot.name]))
@@ -132,19 +135,18 @@ class DileptonBGroup(Nano5TeVHistoModule):
                     if nbh !=0:
                         print(plot.name)
                         bkgMerge.Add(bkghist.obj)
-                bkgMergeEntries = bkgMerge.GetEffectiveEntries()
+                bkgMergeEntries = bkgMerge.Integral()
 
                 obsMerge = obsHists[0].obj.Clone(plot.name+"merge")
                 for nh, obshist in enumerate(obsHists):
                     if nh !=0:
                         obsMerge.Add(obshist.obj)
-                obsMergeEntries = obsMerge.GetEffectiveEntries()
+                obsMergeEntries = obsMerge.Integral()
 
                 sigtt = sigPlot[0].obj.Clone(plot.name+"sigtt")
-                sigttEntries = sigtt.GetEffectiveEntries()
-                print("  >>>>>>>>  " + plot.name+ " xSec ==  " + str(sigttEntries))
-
-                xsec_ttbar1Val = (obsMergeEntries - bkgMergeEntries) / sigttEntries
+                sigttEntries = sigtt.Integral()
+                xsec_ttbar1Val =( (obsMergeEntries - bkgMergeEntries) / sigttEntries)#*68.9
+                print("  >>>>>>>>  " + plot.name+ " xSec ==  " + str(xsec_ttbar1Val))
 
                 xsec_ttbar = obsMerge.Clone(plot.name+"xsec")
                 xsec_ttbar.Add(bkgMerge, -1)
