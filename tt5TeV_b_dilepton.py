@@ -73,6 +73,7 @@ class Nano5TeVHistoModule(Nano5TeVBase, NanoAODHistoModule):
     pass
 
 from itertools import chain, product, repeat
+import ROOT
 class DileptonBGroup(Nano5TeVHistoModule):
     
     def postProcess(self, taskList, config=None, workdir=None, resultsdir=None):
@@ -86,6 +87,10 @@ class DileptonBGroup(Nano5TeVHistoModule):
         effic = {}
         acceptance1Val = {}
         effic1Val = {}
+
+        set1Dxsec = True
+
+        xsecFile = ROOT.TFile("xsec.root", "RECREATE")
 
         from plotit.plotit import Stack
         from bamboo.root import gbl
@@ -110,14 +115,17 @@ class DileptonBGroup(Nano5TeVHistoModule):
             if "nJets" in plot.name:
                 for smp in samples:
                     if smp.cfg.type != "MC": continue
-                    branchRat = 68.9
+                    if "elel" in plot.name: branchRat = 0.0123
+                    elif "elmu" in plot.name: branchRat = 0.0253
+                    elif "mumu" in plot.name: branchRat = 0.0130
+
                     accTmp = smp.getHist(plot).obj.Clone(plot.name+"acc")
-                    #accden = smp.getHist(plot).obj.Clone(plot.name+"accden")
                     accTmpVal = accTmp.Integral()
                     accdenVal = (accden.Integral())
                     acceptance1Val[plot.name] = accTmpVal / (accdenVal * branchRat)
                     effic1Val[plot.name] = accTmpVal / accdenVal
                     print(plot.name+ " A ==  " + str(acceptance1Val[plot.name]))
+
                     print(plot.name+ " epsilon ==  " + str(effic1Val[plot.name]))
                     accden.Scale(branchRat)
                     accden.Print()
@@ -126,7 +134,6 @@ class DileptonBGroup(Nano5TeVHistoModule):
                     acceptance[plot.name] = accTmp 
 
                     effTmp  = smp.getHist(plot).obj.Clone(plot.name+"eff")
-                    #effden = smp.getHist(plot).obj.Clone(plot.name+"effden")
                     effTmp.Divide(effden)
                     effic[plot.name] = effTmp
 
@@ -145,18 +152,27 @@ class DileptonBGroup(Nano5TeVHistoModule):
 
                 sigtt = sigPlot[0].obj.Clone(plot.name+"sigtt")
                 sigttEntries = sigtt.Integral()
-                xsec_ttbar1Val =( (obsMergeEntries - bkgMergeEntries) / sigttEntries)#*68.9
+                xsec_ttbar1Val =( (obsMergeEntries - bkgMergeEntries) / sigttEntries)*68.9
+                xsec_ttbar1ValError = xsec_ttbar1Val /10  # FIXME: this may not be needed, error should be propagated-used from up-down plots
                 print("  >>>>>>>>  " + plot.name+ " xSec ==  " + str(xsec_ttbar1Val))
 
-                xsec_ttbar = obsMerge.Clone(plot.name+"xsec")
-                xsec_ttbar.Add(bkgMerge, -1)
-                xsec_ttbar.Print()
-                sigtt.Print()
-                xsec_ttbar.Divide(sigtt)
+
+                if set1Dxsec:
+                    xsec_ttbar = ROOT.TH1D("plot.name", "xsec; ; xsec", 60., 80., 100)
+                    xsec_ttbar.Fill(xsec_ttbar1Val)
+                    xsec_ttbar.SetBinError(xsec_ttbar.FindBin(h.GetBinCenter(1)), xsec_ttbar1ValError)
+                    xsec_ttbar.Print()
+                else:
+                    xsec_ttbar = obsMerge.Clone(plot.name+"xsec")
+                    xsec_ttbar.Add(bkgMerge, -1)
+                    xsec_ttbar.Print()
+                    sigtt.Print()
+                    xsec_ttbar.Divide(sigtt)
                 cv = gbl.TCanvas(f"c{plot.name}")
                 cv.cd(1)
                 xsec_ttbar.Draw()
                 cv.Update()
+                xsecFile.Write(xsec_ttbar)
                 print(os.path.join(resultsdir, f"{plot.name}ttbar.png"))
                 cv.SaveAs(os.path.join(resultsdir, f"{plot.name}ttbar.pdf"))
 

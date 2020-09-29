@@ -35,6 +35,7 @@ samples:
     era: "2017"
     files: filelists/DYJetsToLL_MLL_50_TuneCP5_5020GeV_amcatnloFXFX.dat
     generated-events: genEventSumw
+    split: 5
   TT:
     group: TT
     cross-section: 68.9
@@ -107,21 +108,21 @@ samples:
     generated-events: genEventSumw
 plotIt:
   systematics:
-    - muScale:
-      type: shape
-    - puWeight:
-      type: shape
-    - PrefireWeight:
-      type: shape
+    - muScale
+    - puWeight
+    - PrefireWeight
     - lumi: 1.015
-    - jet:
-      type: shape  
-    - PDFWeight:
-      type: shape
-    - muR:
-      type: shape
-    - muF:
-      type: shape   
+    - jesTotal
+    - unclustEn
+    - jer
+    - PDFWeights
+    - psISR
+    - psFSR
+    - qcdScale
+    - muLoose
+    - muTight
+    - elLoose
+    - elTight
   configuration:
     width: 800
     height: 600
