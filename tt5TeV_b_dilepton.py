@@ -84,32 +84,46 @@ class DileptonBGroup(Nano5TeVHistoModule):
 
         acceptance = {}
         effic = {}
+        acceptance1Val = {}
+        effic1Val = {}
 
         from plotit.plotit import Stack
         from bamboo.root import gbl
+
         for plot in plots:
             print(plot.name)
             obsHists = [smp.getHist(plot) for smp in samples if smp.cfg.type == "DATA"]
-            obsStack = Stack(obsHists)  # smp.getHist(plot) for smp in samples if smp.cfg.type == "DATA")
-            bkgHists = [smp.getHist(plot) for smp in samples if smp.cfg.type == "MC"]
-            bkgStack = Stack(bkgHists)  #  smp.getHist(plot) for smp in samples if smp.cfg.type == "MC")
+            obsStack = Stack(obsHists) 
+            bkgHists = [smp.getHist(plot) for smp in samples if (smp.cfg.type == "MC" and smp.cfg.name != "TT")]
+            bkgStack = Stack(bkgHists)
             sigPlot = [smp.getHist(plot) for smp in samples if smp.cfg.name == "TT"]
+
+            if "nTotalJets" in plot.name:
+                for smp in samples:
+                    if smp.cfg.type != "MC": continue
+                    accden = smp.getHist(plot).obj.Clone(plot.name+"accden")
+                    effden = smp.getHist(plot).obj.Clone(plot.name+"effden")
 
             if "nJets" in plot.name:
                 for smp in samples:
                     if smp.cfg.type != "MC": continue
                     branchRat = 68.9
                     accTmp = smp.getHist(plot).obj.Clone(plot.name+"acc")
-                    accden = smp.getHist(plot).obj.Clone(plot.name+"accden")
-                    accden.Print()
-                    accden.Scale(68.9)
-                    accTmp.Print()
+                    #accden = smp.getHist(plot).obj.Clone(plot.name+"accden")
+                    accTmpVal = accTmp.GetEffectiveEntries()
+                    accdenVal = (accden.GetEffectiveEntries())
+                    acceptance1Val[plot.name] = accTmpVal / (accdenVal * branchRat)
+                    effic1Val[plot.name] = accTmpVal / accdenVal
+                    print(plot.name+ " A ==  " + str(acceptance1Val[plot.name]))
+                    print(plot.name+ " epsilon ==  " + str(effic1Val[plot.name]))
+                    accden.Scale(branchRat)
                     accden.Print()
                     accTmp.Divide(accden)
+                    accTmp.Print()
                     acceptance[plot.name] = accTmp 
 
                     effTmp  = smp.getHist(plot).obj.Clone(plot.name+"eff")
-                    effden = smp.getHist(plot).obj.Clone(plot.name+"effden")
+                    #effden = smp.getHist(plot).obj.Clone(plot.name+"effden")
                     effTmp.Divide(effden)
                     effic[plot.name] = effTmp
 
@@ -118,22 +132,31 @@ class DileptonBGroup(Nano5TeVHistoModule):
                     if nbh !=0:
                         print(plot.name)
                         bkgMerge.Add(bkghist.obj)
+                bkgMergeEntries = bkgMerge.GetEffectiveEntries()
 
                 obsMerge = obsHists[0].obj.Clone(plot.name+"merge")
                 for nh, obshist in enumerate(obsHists):
                     if nh !=0:
                         obsMerge.Add(obshist.obj)
+                obsMergeEntries = obsMerge.GetEffectiveEntries()
+
+                sigtt = sigPlot[0].obj.Clone(plot.name+"sigtt")
+                sigttEntries = sigtt.GetEffectiveEntries()
+                print("  >>>>>>>>  " + plot.name+ " xSec ==  " + str(sigttEntries))
+
+                xsec_ttbar1Val = (obsMergeEntries - bkgMergeEntries) / sigttEntries
+
                 xsec_ttbar = obsMerge.Clone(plot.name+"xsec")
                 xsec_ttbar.Add(bkgMerge, -1)
                 xsec_ttbar.Print()
-                sigtt = sigPlot[0].obj.Clone(plot.name+"sigtt")
                 sigtt.Print()
                 xsec_ttbar.Divide(sigtt)
                 cv = gbl.TCanvas(f"c{plot.name}")
                 cv.cd(1)
                 xsec_ttbar.Draw()
                 cv.Update()
-                cv.SaveAs(os.path.join(resultsdir, f"{plot.name}.png"))
+                print(os.path.join(resultsdir, f"{plot.name}ttbar.png"))
+                cv.SaveAs(os.path.join(resultsdir, f"{plot.name}ttbar.pdf"))
 
         import IPython
         plots = { p.name: p for p in plots } # for convenience: turn list into dictionary
