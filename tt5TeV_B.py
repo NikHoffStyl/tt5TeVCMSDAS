@@ -28,16 +28,16 @@ class Plot(bamboo.plots.Plot):
                 logger.error("At least two variations histograms must be provided")
             else: ## make an envelope from maximum deviations
                 vars_cont = np.array([ [ hv.GetBinContent(i) for i in range(hv.GetNcells()) ] for hv in hVar_qcdScale ])
-                hVar_up_qcd = hNom.Clone(f"{prefix}up")
-                hVar_down_qcd = hNom.Clone(f"{prefix}down")
+                hVar_up_qcd = hNom.Clone(f"{prefix_qcd}up")
+                hVar_down_qcd = hNom.Clone(f"{prefix_qcd}down")
                 
                 for i,vl,vh in zip(count(), np.amin(vars_cont, axis=0), np.amax(vars_cont, axis=0)):
                     hVar_down_qcd.SetBinContent(i, vl)
                     hVar_up_qcd.SetBinContent(i, vh)
                     print("high:",vh," low:",vl)
 
-                newresults+= hVar_up_qcd
-                newresults+= hVar_down_qcd
+                newresults+= [hVar_up_qcd]
+                newresults+= [hVar_down_qcd]
 
         if (any("__PDFWeights" in h.GetName() for h in bareResults)):
            
@@ -53,17 +53,20 @@ class Plot(bamboo.plots.Plot):
                 pdf_vars=1
                 vars_pdf = np.array([ [ hv.GetBinContent(i) for i in range(hv.GetNcells()-2) ] for hv in hVar_PDFWeights ])
                 vars_alphaS = np.array([ [ hv.GetBinContent(i) for i in range(hv.GetNcells()-2,hv.GetNcells()) ] for hv in hVar_PDFWeights ])
-                hVar_up_pdf = hNom.Clone(f"{prefix}up")
-                hVar_down_pdf = hNom.Clone(f"{prefix}down")
-                for i,rms in zip(count(), sqrt(mean(square(vars_pdf, axis=0)))):
-                    #Xuan's recipe: sqrt(RMS^2 + ((alphas var 1 - alphas var 2)*0.75/2)^2 )
-                    unc = sqrt(square(rms) + square((vars_alphaS[i,0]-alphaS[i,1])*0.75/2) ) 
+                hVar_up_pdf = hNom.Clone(f"{prefix_pdf}up")
+                hVar_down_pdf = hNom.Clone(f"{prefix_pdf}down")
+                for i in range(np.size(vars_pdf,1)):
+                    rms = sqrt(mean(square(vars_pdf[:,i])))
+                    print("pdf rms:",rms)
+                    unc = sqrt(square(rms) + square((vars_alphaS[0,i]-vars_alphaS[1,i])*0.75/2) ) 
                     print("pdf rms unc:",unc)
-                    hVar_down_pdf.SetBinContent(i, 1-rms)
-                    hVar_up_pdf.SetBinContent(i, 1+rms)
+                    hVar_up_originalbin = hVar_up_pdf.GetBinContent(i)
+                    hVar_down_originalbin = hVar_down_pdf.GetBinContent(i)
+                    hVar_down_pdf.SetBinContent(i, hVar_down_originalbin - unc)
+                    hVar_up_pdf.SetBinContent(i, hVar_up_originalbin + unc)
 
-                newresults+= hVar_up_pdf
-                newresults+= hVar_down_pdf
+                newresults+= [hVar_up_pdf]
+                newresults+= [hVar_down_pdf]
                 
         return bareResults+newresults
 
@@ -170,7 +173,7 @@ class Nano5TeVAnalyzer(Nano5TeVHistoModule):
 
 
     def definePlots(self, t, noSel, sample=None, sampleCfg=None):
-        from bamboo.plots import Plot, CutFlowReport, SummedPlot
+        from bamboo.plots import CutFlowReport, SummedPlot
         from bamboo.plots import EquidistantBinning as EqB
         from bamboo import treefunctions as op
 
