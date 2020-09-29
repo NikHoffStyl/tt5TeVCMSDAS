@@ -109,20 +109,20 @@ samples:
 plotIt:
   systematics:
     - muScale:
-      type: shape
+        type: shape
     - puWeight:
-      type: shape
+        type: shape
     - PrefireWeight:
-      type: shape
+        type: shape
     - lumi: 1.015
     - jet:
-      type: shape  
-    - PDFWeight:
-      type: shape
+        type: shape  
+    #- PDFWeight:
+    #   type: shape
     - muR:
-      type: shape
+        type: shape
     - muF:
-      type: shape   
+        type: shape   
   configuration:
     width: 800
     height: 600
